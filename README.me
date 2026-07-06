@@ -1,0 +1,208 @@
+# Multi-Protocol Host Investigation & Threat Hunting Using Splunk
+
+## Overview
+
+This project demonstrates a host-centric threat hunting investigation using Splunk Enterprise and Zeek network telemetry.
+
+Instead of focusing on a single protocol, this investigation correlates activity across DNS, HTTP, FTP, and SSH logs to develop a comprehensive profile of internal hosts. By aggregating protocol-specific events, security analysts can identify communication patterns, high-activity systems, and potential indicators of compromise across the network.
+
+The investigation highlights how Splunk can be used to pivot across multiple Zeek log sources to build a complete understanding of host behavior.
+
+---
+
+## Objectives
+
+- Identify the most active internal hosts
+- Correlate activity across multiple network protocols
+- Determine protocol usage per host
+- Identify high-volume DNS clients
+- Analyze HTTP communication patterns
+- Investigate SSH activity between hosts
+- Demonstrate host-centric threat hunting methodology
+- Build a comprehensive behavioral profile for internal systems
+
+---
+
+# Environment
+
+- Kali Linux
+- Splunk Enterprise
+- Zeek Network Security Monitor
+- Network Traffic Dataset
+- SPL (Search Processing Language)
+
+---
+
+# Investigation Workflow
+
+The investigation followed a structured workflow.
+
+1. Identify the most active internal hosts.
+2. Correlate activity by log source.
+3. Analyze HTTP communication.
+4. Analyze DNS requests.
+5. Analyze SSH connections.
+6. Build a complete host activity profile.
+
+---
+
+# Investigation Queries
+
+## Query 1 – Most Active Internal Hosts
+
+```spl
+index=main
+| rex field=_raw "(?<ip>192\.168\.\d+\.\d+)"
+| stats count by ip
+| sort - count
+| head 10
+```
+
+### Findings
+
+The most active internal systems were identified by aggregating event counts across all available telemetry.
+
+Top hosts included:
+
+- 192.168.207.4
+- 192.168.202.110
+- 192.168.202.93
+- 192.168.202.102
+- 192.168.202.79
+
+---
+
+## Query 2 – Activity by Sourcetype
+
+```spl
+index=main
+| rex field=_raw "(?<ip>192\.168\.\d+\.\d+)"
+| stats count by ip sourcetype
+| sort - count
+```
+
+### Findings
+
+Correlation by sourcetype revealed which protocols generated the majority of activity for each internal host.
+
+Observed protocol activity included:
+
+- Zeek DNS
+- Zeek HTTP
+- Zeek FTP
+- Zeek SSH
+
+This allowed rapid identification of protocol-specific behavior across monitored systems.
+
+---
+
+## Query 3 – Top HTTP Source IPs
+
+```spl
+index=main sourcetype=zeek_http
+| rex field=_raw "^\S+\s+\S+\s+(?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| stats count by src_ip
+| sort - count
+| head 10
+```
+
+### Findings
+
+HTTP telemetry identified systems generating the highest volume of web traffic.
+
+Most active hosts included:
+
+- 192.168.202.110
+- 192.168.202.102
+- 192.168.202.79
+- 192.168.202.96
+
+This information can assist analysts when investigating browsing behavior, malware callbacks, or web-based command-and-control activity.
+
+---
+
+## Query 4 – Top DNS Source IPs
+
+```spl
+index=main sourcetype=dns.log
+| rex field=_raw "^\S+\s+\S+\s+(?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| stats count by src_ip
+| sort - count
+| head 10
+```
+
+### Findings
+
+DNS analysis highlighted the systems generating the highest number of domain lookups.
+
+Top DNS clients included:
+
+- 10.10.117.210
+- 192.168.202.93
+- 192.168.202.103
+- 192.168.202.76
+
+DNS monitoring provides valuable visibility into system communications and can assist with identifying suspicious external resolution attempts.
+
+---
+
+## Query 5 – Top SSH Source IPs
+
+```spl
+index=main sourcetype=zeek_ssh
+| rex field=_raw "^\S+\s+\S+\s+(?<src_ip>\d+\.\d+\.\d+\.\d+)"
+| stats count by src_ip
+| sort - count
+| head 10
+```
+
+### Findings
+
+SSH analysis identified systems initiating the greatest number of secure shell connections.
+
+Most active hosts included:
+
+- 192.168.202.141
+- 192.168.202.110
+- 192.168.202.140
+- 192.168.204.45
+
+This information is useful when monitoring administrative access and identifying unusual remote login behavior.
+
+---
+
+# Key Findings
+
+- Internal hosts displayed varying levels of protocol usage across the environment.
+- DNS generated the highest overall activity.
+- HTTP telemetry identified the primary web clients.
+- SSH activity highlighted administrative communication between systems.
+- FTP activity was observed for file transfer operations.
+- Correlating multiple Zeek log sources provided a more complete understanding of host behavior than analyzing individual protocols independently.
+
+---
+
+# Skills Demonstrated
+
+- Threat Hunting
+- Network Traffic Analysis
+- Splunk SPL
+- Zeek Log Analysis
+- DNS Investigation
+- HTTP Traffic Analysis
+- SSH Analysis
+- FTP Investigation
+- Host Profiling
+- Event Correlation
+- IOC Investigation
+- Cybersecurity Analytics
+- Blue Team Operations
+- SOC Analysis
+
+---
+
+# Conclusion
+
+This investigation demonstrates the effectiveness of host-centric threat hunting using Splunk and Zeek telemetry. By correlating activity across DNS, HTTP, FTP, and SSH logs, analysts can build comprehensive behavioral profiles of internal systems, improving visibility into network activity and strengthening incident detection capabilities.
+
+The project highlights practical techniques for multi-protocol analysis that are commonly used in Security Operations Centers (SOCs) to identify abnormal behavior and investigate potential security incidents.
